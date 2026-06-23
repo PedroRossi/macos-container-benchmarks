@@ -1,0 +1,4 @@
+ROSETTA TAX — apple-native, sysbench cpu (15s), arm64 native vs amd64 via Rosetta:
+  arm64-native   t1=5092.03  t4=18800.43
+  amd64-rosetta  t1=4457.57  t4=16744.32
+  Rosetta vs native: t1=88% of native, t4=89% of native

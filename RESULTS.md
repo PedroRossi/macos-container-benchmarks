@@ -5,9 +5,9 @@
 **Engines:** `apple-native` (container 1.0.0) · `apple-dockerd` (dockerd in an Apple container, config #2) ·
 `lima-docker` (Lima 2.1.1, vz) · `colima` (0.10.1, vz). Docker CLI 29.2.1.
 
-> Status: **partial**. Startup + CPU are solid (repeated). Memory + host-scaling are **directional** (single
-> run / whole-system sampling — see caveats). Disk, volumes, network, build, Rosetta, and the 2 GB sweep are
-> not yet run. This is the first slice of [PLAN.md](./PLAN.md).
+> Status: **partial**. Startup, CPU, volumes, and Rosetta are solid. Memory + host-scaling are **directional**
+> (single run / whole-system sampling — see caveats). Disk, network, build, and the 2 GB sweep are not yet run.
+> This is the first slice of [PLAN.md](./PLAN.md).
 
 ## Comparison table
 
@@ -53,6 +53,29 @@ memory-touching workloads. Note the practical implication on this 24 GB host: ma
 The single-run `sysbench memory` figures (99k–185k MiB/s) are cache-dominated and unreplicated; the apparent
 `apple-native` lead is not trustworthy. Deferred to a proper STREAM / longer-fio treatment.
 
+### 5. Volumes (host bind-mounts) — they behave very differently *(solid: correctness)*
+| engine | read host file | write to host | host sees write | seq write speed |
+|---|:--:|:--:|:--:|--:|
+| apple-native | ✓ | ✓ | ✓ | ~1.5 GB/s |
+| colima | ✓ | ✓ | ✓ | ~1.6 GB/s |
+| lima-docker | ✓ | ✗ | ✗ | — (**default mount is read-only**) |
+| apple-dockerd (config #2) | ✗ | ✗ (into dind VM only) | ✗ | — (**host mounts don't cross 2 VM layers**) |
+
+Two caveats that directly answer "do volumes work":
+- **Lima's `docker` template mounts `$HOME` read-only by default** — `docker run -v` can read host files but not
+  write; needs `mounts: [{location: "~", writable: true}]`.
+- **Config #2 host bind-mounts don't reach macOS.** `dockerd` runs inside the Apple VM, so `-v $HOME/x:/data`
+  resolves against the *dind VM's* filesystem, not the host. To make it work you'd first mount the host dir into
+  the apple-dind container (`container run -v`), then `-v` that path in the nested `docker run` — a two-level mount.
+- apple-native and Colima both do full read-write host mounts out of the box at ~1.5 GB/s sequential (`dd` 256 MB).
+
+### 6. Rosetta (amd64 emulation) — works on both; ~11% CPU tax *(solid on Apple)*
+- **apple-native:** `container run --arch amd64 --rosetta` runs x86_64 images. sysbench cpu:
+  **amd64 = 88% (1-thread) / 89% (4-thread) of native arm64** → ~11–12% tax for integer CPU.
+- **Colima (Lima-family):** with `--vz-rosetta`, `docker run --platform linux/amd64` runs x86_64 (`uname -m`
+  → `x86_64`) ✓. Same underlying Apple Rosetta-for-Linux; comparable tax expected (not separately measured yet).
+- Both translate userspace only; the guest kernel stays native arm64.
+
 ## Qualitative findings (from bring-up)
 
 - **Config #2 works end-to-end.** `dockerd` runs inside an Apple container and is reachable from the host via
@@ -65,9 +88,9 @@ The single-run `sysbench memory` figures (99k–185k MiB/s) are cache-dominated 
   newer than the 6.14.9 cited in pre-run research.
 
 ## Not yet measured (next slices of the plan)
-Disk I/O (rootfs vs named-volume vs bind-mount, `fio`), volume correctness + speed, networking (`iperf3`),
-image build time, real-world (`pgbench`/`redis`/`wrk`), **Rosetta amd64 tax**, the **2 GB** RAM sweep, and a
-hardened host-scaling pass. OrbStack reference bracket not yet installed.
+Disk I/O decomposition (`fio`: rootfs vs named-volume vs bind-mount), networking (`iperf3`), image build time,
+real-world (`pgbench`/`redis`/`wrk`), the **2 GB** RAM sweep, a hardened host-scaling pass (more reps, longer
+settle, memory-touching workloads), Colima's Rosetta tax, and the OrbStack reference bracket.
 
 ## Reproduce
 ```bash
