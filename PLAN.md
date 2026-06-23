@@ -1,6 +1,6 @@
 # Benchmark Plan — Apple `container` vs Lima on macOS
 
-**Status:** DRAFT for discussion (not yet executing). Last updated 2026-06-23.
+**Status:** Execution started 2026-06-23 — first results in [RESULTS.md](./RESULTS.md). Last updated 2026-06-23.
 
 A **narrow, deep** comparison of [apple/container](https://github.com/apple/container) vs
 [lima-vm/lima](https://github.com/lima-vm/lima) as Linux-container substrates on Apple Silicon —
@@ -38,7 +38,7 @@ For a developer on an Apple Silicon Mac choosing between these two:
 |---|---|---|
 | Model | **One micro-VM per container** | **One VM hosting a runtime; many containers** |
 | Hypervisor | Virtualization.framework | Virtualization.framework (`vz`) or QEMU |
-| Guest kernel | Apple's optimized Linux **6.14.9**, *same for every image* | The VM's distro kernel (default Ubuntu LTS) |
+| Guest kernel | Linux **6.18.15** (kata-static 3.28.0), *same for every image* | The VM's distro kernel (default Ubuntu LTS) |
 | Container CLI | `container ...` (its own; **not** Docker) | `nerdctl` (containerd) or **real `docker`** (dockerd in VM) |
 | Docker API/socket | **None** (shim only — Socktainer) | Native (`dockerd`, forwarded socket) |
 | Default CPU/RAM | `--cpus 4`, `--memory 1g` (per container-VM) | `cpus: min(4,host)`, `memory: min(4GiB, ½ host)` (per VM) |
@@ -72,9 +72,9 @@ We handle "Docker on both" along two tracks:
     `DOCKER_HOST=tcp://<container-ip>:2375`. Simplest.
   - **SSH-forwarded socket** — forward the guest `/var/run/docker.sock` to a host `docker.sock` (exact Colima mirror).
 
-  **Feasibility risk (spike first):** Apple's kernel is minimal — `dockerd` needs `overlay`, `br_netfilter`,
-  `iptables/nat`, bridge, cgroups v2. If a module is missing, dockerd won't start. 1.0 also trimmed default
-  capabilities. **Testable in ~10 min — gating P0.**
+  **✓ VALIDATED (2026-06-23):** works end-to-end — `dockerd` (Engine 29.6.0, overlayfs) runs inside an Apple
+  container via `--cap-add ALL`, exposed by Apple's built-in **`--publish-socket`** forwarder; runs real
+  workloads with bridge networking + NAT, boot-to-reachable ≈17 s. See [RESULTS.md](./RESULTS.md).
 
 - **Docker-tooling compatibility (footnote)** — can `docker` CLI / Compose / Testcontainers attach? Lima/Colima:
   yes. Apple native: only via the [Socktainer](https://github.com/socktainer/socktainer) shim (partial) —

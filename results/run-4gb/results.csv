@@ -1,0 +1,33 @@
+timestamp,engine,metric,unit,value,cpus,mem_g,arch,notes
+2026-06-23T20:35:43,apple-native,startup_warm,s, 0.7092707666000001,4,4,arm64,stddev= 0.05432045983743155
+2026-06-23T20:35:46,apple-dockerd,startup_warm,s, 0.14845298833,4,4,arm64,stddev= 0.012318155031731405
+2026-06-23T20:35:50,lima-docker,startup_warm,s, 0.16142626866999998,4,4,arm64,stddev= 0.008473648192872676
+2026-06-23T20:35:53,colima,startup_warm,s, 0.12715030746000006,4,4,arm64,stddev= 0.009386834997502709
+2026-06-23T20:36:25,apple-native,cpu_eps_t1,eps,5171.89,4,4,arm64,
+2026-06-23T20:36:40,apple-native,cpu_eps_t4,eps,18302.67,4,4,arm64,
+2026-06-23T20:36:41,apple-native,mem_write,MiB/s,185191.15,4,4,arm64,
+2026-06-23T20:36:56,apple-dockerd,cpu_eps_t1,eps,5216.79,4,4,arm64,
+2026-06-23T20:37:11,apple-dockerd,cpu_eps_t4,eps,18535.46,4,4,arm64,
+2026-06-23T20:37:12,apple-dockerd,mem_write,MiB/s,128393.54,4,4,arm64,
+2026-06-23T20:37:27,lima-docker,cpu_eps_t1,eps,5111.84,4,4,arm64,
+2026-06-23T20:37:42,lima-docker,cpu_eps_t4,eps,18519.84,4,4,arm64,
+2026-06-23T20:37:42,lima-docker,mem_write,MiB/s,113675.02,4,4,arm64,
+2026-06-23T20:37:57,colima,cpu_eps_t1,eps,5047.83,4,4,arm64,
+2026-06-23T20:38:12,colima,cpu_eps_t4,eps,18661.44,4,4,arm64,
+2026-06-23T20:38:13,colima,mem_write,MiB/s,99413.21,4,4,arm64,
+2026-06-23T20:38:13,apple-native,host_used_base,MB,13077,4,1,arm64,system total used, 0 bench containers
+2026-06-23T20:38:16,apple-native,host_used_delta_n1,MB,254,4,1,arm64,1 containers; total=13331MB
+2026-06-23T20:38:20,apple-native,host_used_delta_n2,MB,877,4,1,arm64,2 containers; total=13954MB
+2026-06-23T20:38:24,apple-native,host_used_delta_n3,MB,564,4,1,arm64,3 containers; total=13641MB
+2026-06-23T20:38:26,apple-dockerd,host_used_base,MB,12893,4,1,arm64,system total used, 0 bench containers
+2026-06-23T20:38:29,apple-dockerd,host_used_delta_n1,MB,258,4,1,arm64,1 containers; total=13151MB
+2026-06-23T20:38:33,apple-dockerd,host_used_delta_n2,MB,133,4,1,arm64,2 containers; total=13026MB
+2026-06-23T20:38:36,apple-dockerd,host_used_delta_n3,MB,106,4,1,arm64,3 containers; total=12999MB
+2026-06-23T20:38:38,lima-docker,host_used_base,MB,12987,4,1,arm64,system total used, 0 bench containers
+2026-06-23T20:38:41,lima-docker,host_used_delta_n1,MB,-5,4,1,arm64,1 containers; total=12982MB
+2026-06-23T20:38:44,lima-docker,host_used_delta_n2,MB,-4,4,1,arm64,2 containers; total=12983MB
+2026-06-23T20:38:48,lima-docker,host_used_delta_n3,MB,-24,4,1,arm64,3 containers; total=12963MB
+2026-06-23T20:38:50,colima,host_used_base,MB,12963,4,1,arm64,system total used, 0 bench containers
+2026-06-23T20:38:53,colima,host_used_delta_n1,MB,86,4,1,arm64,1 containers; total=13049MB
+2026-06-23T20:38:56,colima,host_used_delta_n2,MB,61,4,1,arm64,2 containers; total=13024MB
+2026-06-23T20:38:59,colima,host_used_delta_n3,MB,28,4,1,arm64,3 containers; total=12991MB
