@@ -122,10 +122,9 @@ Real-world workloads (`pgbench`/`redis-benchmark`/`wrk`), a hardened host-scalin
 memory-touching workloads), a named-volume `fio` path, Colima's Rosetta tax, and the OrbStack reference bracket.
 
 ## Reproduce
+Engine bring-up and every phase are documented in [`bench/README.md`](./bench/README.md). Quick version:
 ```bash
-bench/run_all.sh setup      # build the bench image on each engine
-bench/run_all.sh startup    # warm startup (hyperfine, 20 runs)
-bench/run_all.sh cpumem     # sysbench cpu + memory
-SCALE_MEMG=1 bench/run_all.sh hostmem   # host memory scaling
-bench/report.sh results/<stamp>/results.csv
+STAMP=run-4gb bash bench/run_all.sh all              # setup + startup + cpumem + disk + net + build + hostmem
+MEMG=2 STAMP=run-2gb bash bench/run_all.sh startup   # 2 GB sweep (startup/cpumem)
+bash bench/report.sh results/run-4gb/results.csv     # render comparison table
 ```

@@ -3,7 +3,8 @@
 A **focused, deep** benchmark of **[Apple `container`](https://github.com/apple/container) vs
 [Lima](https://github.com/lima-vm/lima)** on Apple Silicon (macOS 26 Tahoe).
 
-> **Status:** planning / pre-execution. The full design is in **[PLAN.md](./PLAN.md)** — review that first.
+> **Status:** first results are in **[RESULTS.md](./RESULTS.md)**; full design in **[PLAN.md](./PLAN.md)**;
+> how to run the harness in **[bench/README.md](./bench/README.md)**.
 
 ## The question
 
@@ -39,10 +40,9 @@ questions it leaves open: **2 GB behavior, Rosetta tax, host resource usage/scal
 ## Layout
 
 ```
-PLAN.md      # full benchmark design, matrix, methodology
-bench/       # orchestrator + per-dimension scripts (run_all.sh)
-images/      # single multi-arch bench image (fio/sysbench/iperf3/pgbench/redis/wrk)
-configs/     # lima yaml + apple container flag sets
-results/     # raw CSVs per run
-analysis/    # tables + charts
+PLAN.md          # full benchmark design, matrix, methodology
+RESULTS.md       # findings + comparison tables
+bench/           # harness: run_all.sh, lib.sh, report.sh, README.md (how to run)
+images/bench/    # single Ubuntu bench image (sysbench/fio/iperf3/openssl)
+results/         # raw CSVs + logs per run (run-4gb, run-2gb)
 ```
