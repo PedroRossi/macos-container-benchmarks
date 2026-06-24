@@ -105,11 +105,82 @@ hostmem() {
   done
 }
 
+# run the bench image with an optional host bind-mount at /data
+_run_with_mount() { # eng hostdir(or empty) cmd...
+  local eng="$1" hm="$2"; shift 2
+  local v=(); [ -n "$hm" ] && v=(-v "$hm:/data")
+  if [ "$eng" = apple-native ]; then container run --rm "${v[@]}" "$BENCH_IMAGE" "$@"
+  else docker --context "$(_docker_ctx "$eng")" run --rm "${v[@]}" "$BENCH_IMAGE" "$@"; fi
+}
+
+# ---- disk I/O (fio): rootfs (overlay, buffered) all engines; bind-mount (virtiofs, O_DIRECT) where RW works ----
+fio_one() { # eng label dir direct hostdir rw
+  local eng="$1" label="$2" dir="$3" direct="$4" hm="$5" rw="$6" out iops bw ioeng=libaio iod=64
+  [ "$direct" = 0 ] && { ioeng=psync; iod=1; }   # libaio needs O_DIRECT; psync for buffered
+  out=$(_run_with_mount "$eng" "$hm" fio --name=j --directory="$dir" --size=512M --runtime=20 --time_based \
+        --ioengine="$ioeng" --direct="$direct" --bs=4k --iodepth="$iod" --rw="$rw" --group_reporting 2>&1)
+  iops=$(echo "$out" | awk -F'[=,]' '/IOPS=/{print $2; exit}')
+  bw=$(echo "$out" | awk -F'[()]' '/IOPS=/{print $2; exit}')
+  csv_row "$CSV" "$eng" "fio_${label}_${rw}" IOPS "${iops:-NA}" "$CPUS" "$MEMG" arm64 "4k qd64 direct=$direct bw=${bw:-NA}"
+  log "  $label $rw -> ${iops:-NA} IOPS ${bw:+($bw)}"
+}
+disk() {
+  local VT="$HOME/bench-fio"; rm -rf "$VT"; mkdir -p "$VT"
+  for e in $(available_engines); do
+    log "disk(rootfs): $e"
+    fio_one "$e" rootfs /tmp 0 "" randwrite
+    fio_one "$e" rootfs /tmp 0 "" randread
+    case "$e" in
+      apple-native|colima)
+        log "disk(bindmount/virtiofs): $e"
+        fio_one "$e" bindmount /data 1 "$VT" randwrite
+        fio_one "$e" bindmount /data 1 "$VT" randread ;;
+    esac
+  done
+  rm -rf "$VT"
+}
+
+# ---- network: container -> macOS host iperf3 ----
+net() {
+  command -v iperf3 >/dev/null || { log "no host iperf3"; return; }
+  pkill -f 'iperf3 -s' 2>/dev/null; ( iperf3 -s >/dev/null 2>&1 & ) ; sleep 1
+  local hostip out g
+  for e in $(available_engines); do
+    case "$e" in apple-native) hostip="192.168.64.1" ;; *) hostip="host.docker.internal" ;; esac
+    out=$(_run_with_mount "$e" "" iperf3 -c "$hostip" -t 8 -P 4 2>&1)
+    g=$(echo "$out" | awk '/receiver/{v=$(NF-2)" "$(NF-1)} END{print v}')
+    csv_row "$CSV" "$e" net_c2host Gbps "${g:-NA}" "$CPUS" "$MEMG" arm64 "iperf3 -P4 -> $hostip"
+    log "  net $e -> $hostip : ${g:-NA}"
+  done
+  pkill -f 'iperf3 -s' 2>/dev/null
+}
+
+# ---- build time: --no-cache build of the bench Dockerfile ----
+build_time() {
+  local D="$REPO_DIR/images/bench/Dockerfile" C="$REPO_DIR/images/bench"
+  for e in $(available_engines); do
+    local t cmd
+    if [ "$e" = apple-native ]; then
+      cmd="container build --no-cache -t bench:timing -f $D $C"
+    else
+      cmd="docker --context $(_docker_ctx "$e") build --no-cache -t bench:timing -f $D $C"
+    fi
+    # run build via sh -c (its output -> /dev/null); /usr/bin/time's "real" line stays on stderr.
+    # gsub comma->dot: this host's locale prints decimals with a comma, which would corrupt the CSV.
+    t=$( { /usr/bin/time -p sh -c "$cmd >/dev/null 2>&1"; } 2>&1 | awk '/^real/{gsub(/,/,".",$2); print $2}' )
+    csv_row "$CSV" "$e" build_nocache s "${t:-NA}" "$CPUS" "$MEMG" arm64 "bench Dockerfile no-cache"
+    log "  build $e -> ${t:-NA}s"
+  done
+}
+
 case "$PHASE" in
   setup)   setup ;;
   startup) startup ;;
   cpumem)  cpumem ;;
   hostmem) hostmem ;;
-  all)     setup; startup; cpumem; hostmem; log "CSV -> $CSV" ;;
+  disk)    disk ;;
+  net)     net ;;
+  build)   build_time ;;
+  all)     setup; startup; cpumem; disk; net; build_time; hostmem; log "CSV -> $CSV" ;;
   *) echo "unknown phase: $PHASE"; exit 1 ;;
 esac

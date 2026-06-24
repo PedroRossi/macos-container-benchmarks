@@ -1,0 +1,17 @@
+timestamp,engine,metric,unit,value,cpus,mem_g,arch,notes
+2026-06-23T22:06:27,apple-native,startup_warm,s, 0.75257450377,4,4,arm64,stddev= 0.03670151865484923
+2026-06-23T22:06:30,apple-dockerd,startup_warm,s, 0.14560323164999997,4,4,arm64,stddev= 0.008143774722018465
+2026-06-23T22:06:34,lima-docker,startup_warm,s, 0.15990252957,4,4,arm64,stddev= 0.008011362491075662
+2026-06-23T22:06:37,colima,startup_warm,s, 0.12589318375,4,4,arm64,stddev= 0.007431619435555488
+2026-06-23T22:06:53,apple-native,cpu_eps_t1,eps,5230.68,4,4,arm64,
+2026-06-23T22:07:09,apple-native,cpu_eps_t4,eps,18309.08,4,4,arm64,
+2026-06-23T22:07:10,apple-native,mem_write,MiB/s,184634.63,4,4,arm64,
+2026-06-23T22:07:25,apple-dockerd,cpu_eps_t1,eps,5118.75,4,4,arm64,
+2026-06-23T22:07:40,apple-dockerd,cpu_eps_t4,eps,18197.76,4,4,arm64,
+2026-06-23T22:07:40,apple-dockerd,mem_write,MiB/s,133080.90,4,4,arm64,
+2026-06-23T22:07:55,lima-docker,cpu_eps_t1,eps,4998.69,4,4,arm64,
+2026-06-23T22:08:11,lima-docker,cpu_eps_t4,eps,18516.08,4,4,arm64,
+2026-06-23T22:08:11,lima-docker,mem_write,MiB/s,83342.64,4,4,arm64,
+2026-06-23T22:08:26,colima,cpu_eps_t1,eps,5056.76,4,4,arm64,
+2026-06-23T22:08:41,colima,cpu_eps_t4,eps,18281.02,4,4,arm64,
+2026-06-23T22:08:41,colima,mem_write,MiB/s,136607.00,4,4,arm64,

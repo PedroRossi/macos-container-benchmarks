@@ -31,3 +31,23 @@ timestamp,engine,metric,unit,value,cpus,mem_g,arch,notes
 2026-06-23T20:38:53,colima,host_used_delta_n1,MB,86,4,1,arm64,1 containers; total=13049MB
 2026-06-23T20:38:56,colima,host_used_delta_n2,MB,61,4,1,arm64,2 containers; total=13024MB
 2026-06-23T20:38:59,colima,host_used_delta_n3,MB,28,4,1,arm64,3 containers; total=12991MB
+2026-06-23T21:58:01,apple-native,fio_rootfs_randwrite,IOPS,314k,4,4,arm64,4k qd64 direct=0 bw=1284MB/s
+2026-06-23T21:58:23,apple-native,fio_rootfs_randread,IOPS,31.3k,4,4,arm64,4k qd64 direct=0 bw=128MB/s
+2026-06-23T21:58:44,apple-native,fio_bindmount_randwrite,IOPS,16.1k,4,4,arm64,4k qd64 direct=1 bw=65.8MB/s
+2026-06-23T21:59:05,apple-native,fio_bindmount_randread,IOPS,34.1k,4,4,arm64,4k qd64 direct=1 bw=140MB/s
+2026-06-23T21:59:26,apple-dockerd,fio_rootfs_randwrite,IOPS,701k,4,4,arm64,4k qd64 direct=0 bw=2871MB/s
+2026-06-23T21:59:46,apple-dockerd,fio_rootfs_randread,IOPS,29.9k,4,4,arm64,4k qd64 direct=0 bw=123MB/s
+2026-06-23T22:00:07,lima-docker,fio_rootfs_randwrite,IOPS,558k,4,4,arm64,4k qd64 direct=0 bw=2284MB/s
+2026-06-23T22:00:28,lima-docker,fio_rootfs_randread,IOPS,27.6k,4,4,arm64,4k qd64 direct=0 bw=113MB/s
+2026-06-23T22:00:49,colima,fio_rootfs_randwrite,IOPS,524k,4,4,arm64,4k qd64 direct=0 bw=2147MB/s
+2026-06-23T22:01:10,colima,fio_rootfs_randread,IOPS,27.2k,4,4,arm64,4k qd64 direct=0 bw=112MB/s
+2026-06-23T22:01:30,colima,fio_bindmount_randwrite,IOPS,13.5k,4,4,arm64,4k qd64 direct=1 bw=55.3MB/s
+2026-06-23T22:01:51,colima,fio_bindmount_randread,IOPS,31.5k,4,4,arm64,4k qd64 direct=1 bw=129MB/s
+2026-06-23T22:02:25,apple-native,net_c2host,Gbps,66.5 Gbits/sec,4,4,arm64,iperf3 -P4 -> 192.168.64.1
+2026-06-23T22:02:26,apple-dockerd,net_c2host,Gbps,NA,4,4,arm64,iperf3 -P4 -> host.docker.internal
+2026-06-23T22:02:34,lima-docker,net_c2host,Gbps,2.94 Gbits/sec,4,4,arm64,iperf3 -P4 -> host.docker.internal
+2026-06-23T22:02:42,colima,net_c2host,Gbps,2.85 Gbits/sec,4,4,arm64,iperf3 -P4 -> host.docker.internal
+2026-06-23T22:10:01,apple-native,build_nocache,s,24.69,4,4,arm64,bench Dockerfile no-cache
+2026-06-23T22:10:18,apple-dockerd,build_nocache,s,16.89,4,4,arm64,bench Dockerfile no-cache
+2026-06-23T22:10:34,lima-docker,build_nocache,s,16.62,4,4,arm64,bench Dockerfile no-cache
+2026-06-23T22:10:51,colima,build_nocache,s,17.23,4,4,arm64,bench Dockerfile no-cache

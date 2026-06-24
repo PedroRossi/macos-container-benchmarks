@@ -5,9 +5,9 @@
 **Engines:** `apple-native` (container 1.0.0) · `apple-dockerd` (dockerd in an Apple container, config #2) ·
 `lima-docker` (Lima 2.1.1, vz) · `colima` (0.10.1, vz). Docker CLI 29.2.1.
 
-> Status: **partial**. Startup, CPU, volumes, and Rosetta are solid. Memory + host-scaling are **directional**
-> (single run / whole-system sampling — see caveats). Disk, network, build, and the 2 GB sweep are not yet run.
-> This is the first slice of [PLAN.md](./PLAN.md).
+> Status: Startup, CPU, volumes, Rosetta, disk, network, build, and the **2 GB sweep** are done. Memory
+> bandwidth + host-scaling are **directional** (see caveats). Remaining: real-world (pgbench/redis/wrk), a
+> hardened host-scaling pass, the OrbStack bracket. Covers most of [PLAN.md](./PLAN.md).
 
 ## Comparison table
 
@@ -16,6 +16,10 @@
 | **startup warm** (s) | **0.709** | 0.148 | 0.161 | 0.127 |
 | cpu 1-thread (eps) | 5172 | 5217 | 5112 | 5048 |
 | cpu 4-thread (eps) | 18303 | 18535 | 18520 | 18661 |
+| disk bind-mount randwrite (IOPS) | 16.1k | — | — | 13.5k |
+| disk bind-mount randread (IOPS) | 34.1k | — | — | 31.5k |
+| network c→host (Gbit/s) | 66.5* | NA | 2.94 | 2.85 |
+| build no-cache (s) | ~17–25 | ~17 | ~17 | ~16 |
 | mem write (MiB/s) *(noisy)* | 185191 | 128394 | 113675 | 99413 |
 | host mem Δ, N=1 container (MB) | +254 | +258 | −5 | +86 |
 | host mem Δ, N=2 containers (MB) | **+877** | +133 | −4 | +61 |
@@ -76,6 +80,32 @@ Two caveats that directly answer "do volumes work":
   → `x86_64`) ✓. Same underlying Apple Rosetta-for-Linux; comparable tax expected (not separately measured yet).
 - Both translate userspace only; the guest kernel stays native arm64.
 
+### 7. Disk I/O (`fio`) *(bind-mount solid; rootfs is cache-bound)*
+- **Bind-mount (virtiofs, O_DIRECT, 4K QD64)** — the meaningful host-shared-storage number: apple-native
+  randwrite **16.1k IOPS** / randread **34.1k**; colima randwrite **13.5k** / randread **31.5k**. apple-native's
+  virtiofs is ~15–20% faster on random write. (lima-docker omitted — read-only mount; config #2 — host mount unreachable.)
+- **Rootfs (overlay, buffered)** — 314k–701k IOPS / 1.3–2.9 GB/s across engines: these are **page-cache numbers,
+  not storage** (buffered 4K writes never hit the device in 20 s), so "all fast, not a differentiator." A true
+  rootfs-device test needs O_DIRECT (overlay doesn't support it) or a dataset > RAM.
+
+### 8. Network — container → macOS host (`iperf3 -P4`) *(real gap, caveated paths)*
+- **apple-native 66.5 Gbit/s** (to vmnet gateway 192.168.64.1) vs **lima-docker 2.94 / colima 2.85 Gbit/s** (via
+  `host.docker.internal`). The Lima-family Docker path runs through the VM's userspace port-forwarding (~3 Gbit/s
+  ceiling); apple-native's vmnet path is far faster. *(\*Caveat: the target addresses differ, so it isn't a
+  perfectly controlled comparison — but the order-of-magnitude gap matches the architectures.)*
+- **apple-dockerd NA** — `host.docker.internal` inside the dind VM doesn't reach macOS (config #2 two-layer).
+
+### 9. Build time — `--no-cache` bench image *(tied; apt-download-bound)*
+All ~**16–25 s** (apple-native 17–25, others ~16–17). Dominated by `apt-get` downloads, so the spread is mostly
+network variance, not the engine. Notably **Apple's builder completed the build** — confirming outbound network
+works in 1.0 (zot24 had to skip this on 0.11.0).
+
+### 10. 2 GB vs 4 GB sweep — single-container perf is RAM-insensitive *(solid)*
+At 2 GB, startup/CPU/memory are **statistically unchanged** from 4 GB (apple-native startup 0.75 s vs 0.71 s —
+within noise; CPU identical). RAM size barely affects *single-container* performance; its real impact is on
+**host footprint / density** (§3) — fewer large `apple-native` VMs fit before swap. (For docker engines "2 GB"
+caps the container while the VM stays 4 GB — the plan's RAM-semantics asymmetry; for apple-native it sizes the whole VM.)
+
 ## Qualitative findings (from bring-up)
 
 - **Config #2 works end-to-end.** `dockerd` runs inside an Apple container and is reachable from the host via
@@ -88,9 +118,8 @@ Two caveats that directly answer "do volumes work":
   newer than the 6.14.9 cited in pre-run research.
 
 ## Not yet measured (next slices of the plan)
-Disk I/O decomposition (`fio`: rootfs vs named-volume vs bind-mount), networking (`iperf3`), image build time,
-real-world (`pgbench`/`redis`/`wrk`), the **2 GB** RAM sweep, a hardened host-scaling pass (more reps, longer
-settle, memory-touching workloads), Colima's Rosetta tax, and the OrbStack reference bracket.
+Real-world workloads (`pgbench`/`redis-benchmark`/`wrk`), a hardened host-scaling pass (more reps, longer settle,
+memory-touching workloads), a named-volume `fio` path, Colima's Rosetta tax, and the OrbStack reference bracket.
 
 ## Reproduce
 ```bash
