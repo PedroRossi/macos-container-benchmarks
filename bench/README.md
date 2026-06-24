@@ -82,11 +82,39 @@ bash idle_compare.sh
 - `hostmem` and `mem write` are directional, not publication-grade — need more reps / longer settle / memory-touching workloads.
 - This host's locale uses comma decimals; `build` parsing normalizes them (`gsub(/,/,".")`).
 
-## 3. Tear down (free the VMs)
+## 3. Tear down
 
+**Stop (free the VMs, keep everything installed):**
 ```bash
 container stop apple-dind && container builder stop && container system stop
 limactl stop bench-docker
 colima stop
+orb stop
 rm -f "$HOME/apple-docker.sock"
+```
+
+**Uninstall the engines completely:**
+```bash
+# --- Apple container ---
+# Interactively, the official script is enough:  sudo /usr/local/bin/uninstall-container.sh -d
+# (-d also deletes the multi-GB image/kernel store at ~/Library/Application Support/com.apple.container)
+# Its internal `sudo` needs a TTY; in a non-interactive shell replicate it manually:
+container system stop
+for f in $(pkgutil --only-files --files com.apple.container-installer); do sudo rm -f "/usr/local/$f"; done
+sudo rm -rf /usr/local/libexec/container
+sudo pkgutil --forget com.apple.container-installer
+rm -rf "$HOME/Library/Application Support/com.apple.container"
+defaults delete com.apple.container.defaults 2>/dev/null || true
+
+# --- OrbStack ---
+orb stop
+brew uninstall --cask orbstack
+docker context rm -f orbstack
+find "$HOME/Library" -maxdepth 5 -iname '*orbstack*' -exec rm -rf {} +   # -exec handles paths with spaces
+
+# --- orphaned docker context from the dockerd-in-Apple config ---
+docker context rm -f apple-dockerd
+
+# --- (optional) remove the Lima instance created for benchmarking ---
+limactl delete bench-docker
 ```
