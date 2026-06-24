@@ -106,6 +106,21 @@ within noise; CPU identical). RAM size barely affects *single-container* perform
 **host footprint / density** (§3) — fewer large `apple-native` VMs fit before swap. (For docker engines "2 GB"
 caps the container while the VM stays 4 GB — the plan's RAM-semantics asymmetry; for apple-native it sizes the whole VM.)
 
+### 11. OrbStack vs Colima — idle host memory *(answers "is OrbStack as light as Colima?")*
+Measured one engine at a time vs a both-stopped baseline (whole-system used RAM; `bench/idle_compare.sh`):
+
+| state | OrbStack | Colima |
+|---|--:|--:|
+| idle, 0 containers (settled) | **~90 MB** | ~377 MB |
+| + 1 idle Alpine | ~315 MB | ~310 MB |
+| fresh start / under activity | ~700 MB (phys_footprint) | — |
+
+**OrbStack is lighter at idle** — and the headline is its **dynamic memory reclaim**: right after start/activity it
+held ~700 MB, then released it down to ~90 MB once idle, whereas Colima's `vz` VM (started at `--memory 4`) sat
+around ~377 MB. **Under an active container the two converge (~310 MB).** So OrbStack is *at least as light, and
+noticeably lighter when idle*; Colima's footprint scales with the `--memory` you give it. (±~70 MB measurement
+noise — Colima's "+1 container" read dipped slightly below its idle read, which is within that band.)
+
 ## Qualitative findings (from bring-up)
 
 - **Config #2 works end-to-end.** `dockerd` runs inside an Apple container and is reachable from the host via
@@ -119,7 +134,8 @@ caps the container while the VM stays 4 GB — the plan's RAM-semantics asymmetr
 
 ## Not yet measured (next slices of the plan)
 Real-world workloads (`pgbench`/`redis-benchmark`/`wrk`), a hardened host-scaling pass (more reps, longer settle,
-memory-touching workloads), a named-volume `fio` path, Colima's Rosetta tax, and the OrbStack reference bracket.
+memory-touching workloads), a named-volume `fio` path, Colima's Rosetta tax, and OrbStack on the full perf suite
+(it's now wired into the harness; only the idle-memory bracket — §11 — has been run).
 
 ## Reproduce
 Engine bring-up and every phase are documented in [`bench/README.md`](./bench/README.md). Quick version:

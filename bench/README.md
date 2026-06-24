@@ -11,6 +11,7 @@ See [`../PLAN.md`](../PLAN.md) for design and [`../RESULTS.md`](../RESULTS.md) f
 | `apple-dockerd` | real `dockerd` **inside** an Apple container (config #2) | `docker --context apple-dockerd …` |
 | `lima-docker` | `dockerd` in a Lima `vz` VM | `docker --context lima-docker …` |
 | `colima` | `dockerd` in a Colima (Lima) `vz` VM | `docker --context colima …` |
+| `orbstack` | OrbStack's own lightweight VM | `docker --context orbstack …` |
 
 `lib.sh` abstracts these: `engine_oneshot`, `engine_run_detached`, `engine_rm`, `host_used_mb`, CSV helpers.
 
@@ -33,6 +34,9 @@ docker context create lima-docker --docker "host=unix://$HOME/.lima/bench-docker
 
 # Colima VM (vz). add --vz-rosetta to enable amd64/Rosetta
 colima start --cpu 4 --memory 4 --vm-type vz
+
+# OrbStack (its own VM; auto-creates the `orbstack` docker context)
+brew install --cask orbstack && orb start
 ```
 
 ## 2. Build the bench image + run phases
@@ -53,6 +57,9 @@ MEMG=2 STAMP=run-2gb bash run_all.sh cpumem
 
 # render a comparison table from any run's CSV
 bash report.sh results/run-4gb/results.csv
+
+# idle host-memory bracket: OrbStack vs Colima (isolated, one engine at a time)
+bash idle_compare.sh
 ```
 
 ### Env vars

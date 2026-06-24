@@ -12,20 +12,21 @@ APPLE_SOCK="${APPLE_SOCK:-$HOME/apple-docker.sock}"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RESULTS_DIR="${RESULTS_DIR:-$REPO_DIR/results}"
 
-ALL_ENGINES=(apple-native apple-dockerd lima-docker colima)
+ALL_ENGINES=(apple-native apple-dockerd lima-docker colima orbstack)
 
 _docker_ctx() {  # docker context name for a docker-based engine
   case "$1" in
     apple-dockerd) echo apple-dockerd ;;
     lima-docker)   echo lima-docker ;;
     colima)        echo colima ;;
+    orbstack)      echo orbstack ;;
   esac
 }
 
 engine_available() {
   case "$1" in
     apple-native)  command -v container >/dev/null 2>&1 && container ls >/dev/null 2>&1 ;;
-    apple-dockerd|lima-docker|colima)
+    apple-dockerd|lima-docker|colima|orbstack)
       docker --context "$(_docker_ctx "$1")" version >/dev/null 2>&1 ;;
     *) return 1 ;;
   esac
